@@ -55,10 +55,9 @@ describe Shellwords do
 
   it "stringifies" do
     three = Shellwords.shellescape(3)
-    three.should eq(3)
+    three.should eq("3")
 
     joined = ["ps", "-p", Process.pid].shelljoin
-    assert_equal "ps -p #{Process.pid}", joined
     joined.should eq("ps -p #{Process.pid}")
   end
 
@@ -87,16 +86,16 @@ describe Shellwords do
     ]
 
     tokens.each { |token|
-      assert_equal [token], Shellwords.shellescape(token).shellsplit
+      Shellwords.shellescape(token).shellsplit.should eq([token])
     }
 
-    assert_equal tokens, Shellwords.shelljoin(tokens).shellsplit
+    Shellwords.shelljoin(tokens).shellsplit.should eq(tokens)
   end
 
   it "works with multibyte characters" do
     # This is not a spec.  It describes the current behavior which may
     # be changed in future.  There would be no multibyte character
     # used as shell meta-character that needs to be escaped.
-    assert_equal "\\あ\\い", "あい".shellescape
+    "あい".shellescape.should eq("\\あ\\い")
   end
 end

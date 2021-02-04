@@ -203,7 +203,7 @@ class String
   #
   # See Shellwords.shellsplit for details.
   def shellsplit
-    Shellwords.split(self)
+    Shellwords.shellsplit(self)
   end
 
   # call-seq:
@@ -214,7 +214,7 @@ class String
   #
   # See Shellwords.shellescape for details.
   def shellescape
-    Shellwords.escape(self)
+    Shellwords.shellescape(self)
   end
 end
 
@@ -227,6 +227,6 @@ class Array
   #
   # See Shellwords.shelljoin for details.
   def shelljoin
-    Shellwords.join(self)
+    Shellwords.shelljoin(self)
   end
 end
