@@ -1,0 +1,27 @@
+language: crystal
+crystal:
+  - latest
+  - nightly
+
+install:
+  - shards install
+
+script:
+  - crystal spec
+  - crystal spec --release --no-debug
+  - crystal tool format --check
+  - crystal bin/ameba.cr src
+  - crystal docs
+
+matrix:
+  allow_failures:
+    - crystal: nightly
+
+deploy:
+  provider: pages
+  skip_cleanup: true
+  github_token: $GITHUB_TOKEN
+  project_name: szTheory/shellwords-crystal
+  on:
+    branch: master
+  local_dir: docs
