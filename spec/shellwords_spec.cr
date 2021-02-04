@@ -1,80 +1,74 @@
-# -*- coding: utf-8 -*-
-# frozen_string_literal: false
-require 'test/unit'
-require 'shellwords'
+require "./spec_helper"
 
-class TestShellwords < Test::Unit::TestCase
-
-  include Shellwords
-
-  def test_shellwords
-    cmd1 = "ruby -i'.bak' -pe \"sub /foo/, '\\\\&bar'\" foobar\\ me.txt\n"
-    assert_equal(['ruby', '-i.bak', '-pe', "sub /foo/, '\\&bar'", "foobar me.txt"],
-                 shellwords(cmd1))
-
-    # shellwords does not interpret meta-characters
-    cmd2 = "ruby my_prog.rb | less"
-    assert_equal(['ruby', 'my_prog.rb', '|', 'less'],
-                 shellwords(cmd2))
+describe Shellwords do
+  it "parse a string into a Bourne shell friendly Array" do
+    cmd = "ruby -i'.bak' -pe \"sub /foo/, '\\\\&bar'\" foobar\\ me.txt\n"
+    ["ruby", "-i.bak", "-pe", "sub /foo/, '\\&bar'", "foobar me.txt"].should eq(Shellwords.shellsplit(cmd))
   end
 
-  def test_unmatched_double_quote
-    bad_cmd = 'one two "three'
-    assert_raise ArgumentError do
-      shellwords(bad_cmd)
+  it "does not interpret meta-characters" do
+    cmd = "ruby my_prog.rb | less"
+    ["ruby", "my_prog.rb", "|", "less"].should eq(Shellwords.shellsplit(cmd))
+  end
+
+  it "it raises an error with unmatched double quotes" do
+    bad_cmd = "one two \"three"
+    expect_raises ArgumentError do
+      Shellwords.shellsplit(bad_cmd)
     end
   end
 
-  def test_unmatched_single_quote
+  it "raises an error with unmatched single quotes" do
     bad_cmd = "one two 'three"
-    assert_raise ArgumentError do
-      shellwords(bad_cmd)
+    expect_raises ArgumentError do
+      Shellwords.shellsplit(bad_cmd)
     end
   end
 
-  def test_unmatched_quotes
-    bad_cmd = "one '"'"''""'""
-    assert_raise ArgumentError do
-      shellwords(bad_cmd)
+  it "raises an error with unmatched quotes" do
+    bad_cmd = "one '\"'\"''\"\"'\""
+    expect_raises ArgumentError do
+      Shellwords.shellsplit(bad_cmd)
     end
   end
 
-  def test_backslashes
+  # TODO: re-enable this spec
+  # def test_backslashes
+  #   [
+  #     [
+  #       %q{/a//b///c////d/////e/ "/a//b///c////d/////e/ "'/a//b///c////d/////e/ '/a//b///c////d/////e/ },
+  #       "a/b/c//d//e /a/b//c//d///e/ /a//b///c////d/////e/ a/b/c//d//e "
+  #     ],
+  #     [
+  #       %q{printf %s /"/$/`///"/r/n},
+  #       "printf', '%s', '\"$`/\"rn"
+  #     ],
+  #     [
+  #       %q{printf %s "/"/$/`///"/r/n"},
+  #       "printf', '%s', '\"$`/\"/r/n"
+  #     ]
+  #   ].map { |strs|
+  #     cmdline, *expected = strs.map { |str| str.tr("/", "\\\\") }
+  #     assert_equal expected, shellsplit(cmdline)
+  #   }
+  # end
 
-    [
-      [
-        %q{/a//b///c////d/////e/ "/a//b///c////d/////e/ "'/a//b///c////d/////e/ '/a//b///c////d/////e/ },
-        'a/b/c//d//e /a/b//c//d///e/ /a//b///c////d/////e/ a/b/c//d//e '
-      ],
-      [
-        %q{printf %s /"/$/`///"/r/n},
-        'printf', '%s', '"$`/"rn'
-      ],
-      [
-        %q{printf %s "/"/$/`///"/r/n"},
-        'printf', '%s', '"$`/"/r/n'
-      ]
-    ].map { |strs|
-      cmdline, *expected = strs.map { |str| str.tr("/", "\\\\") }
-      assert_equal expected, shellwords(cmdline)
-    }
+  it "stringifies" do
+    three = Shellwords.shellescape(3)
+    three.should eq(3)
+
+    joined = ["ps", "-p", Process.pid].shelljoin
+    assert_equal "ps -p #{Process.pid}", joined
+    joined.should eq("ps -p #{Process.pid}")
   end
 
-  def test_stringification
-    three = shellescape(3)
-    assert_equal '3', three
-
-    joined = ['ps', '-p', $$].shelljoin
-    assert_equal "ps -p #{$$}", joined
+  it "shellescape works" do
+    Shellwords.shellescape("").should eq("''")
+    Shellwords.shellescape("^AZaz09_\\-.,:/@\n+'\"").should eq("\\^AZaz09_\\\\-.,:/@'\n'+\\'\\\"")
   end
 
-  def test_shellescape
-    assert_equal "''", shellescape('')
-    assert_equal "\\^AZaz09_\\\\-.,:/@'\n'+\\'\\\"", shellescape("^AZaz09_\\-.,:\/@\n+'\"")
-  end
-
-  def test_whitespace
-    empty = ''
+  it "works with whitespace" do
+    empty = ""
     space = " "
     newline = "\n"
     tab = "\t"
@@ -89,40 +83,17 @@ class TestShellwords < Test::Unit::TestCase
       tab * 2,
       empty,
       space + newline + tab,
-      empty
+      empty,
     ]
 
     tokens.each { |token|
-      assert_equal [token], shellescape(token).shellsplit
+      assert_equal [token], Shellwords.shellescape(token).shellsplit
     }
 
-
-    assert_equal tokens, shelljoin(tokens).shellsplit
+    assert_equal tokens, Shellwords.shelljoin(tokens).shellsplit
   end
 
-  def test_frozenness
-    [
-      shellescape(String.new),
-      shellescape(String.new('foo')),
-      shellescape(''.freeze),
-      shellescape("\n".freeze),
-      shellescape('foo'.freeze),
-      shelljoin(['ps'.freeze, 'ax'.freeze]),
-    ].each { |object|
-      assert_not_predicate object, :frozen?
-    }
-
-    [
-      shellsplit('ps'),
-      shellsplit('ps ax'),
-    ].each { |array|
-      array.each { |arg|
-        assert_not_predicate arg, :frozen?, array.inspect
-      }
-    }
-  end
-
-  def test_multibyte_characters
+  it "works with multibyte characters" do
     # This is not a spec.  It describes the current behavior which may
     # be changed in future.  There would be no multibyte character
     # used as shell meta-character that needs to be escaped.

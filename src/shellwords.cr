@@ -1,4 +1,3 @@
-# frozen-string-literal: true
 ##
 # == Manipulates strings like the UNIX Bourne shell
 #
@@ -56,13 +55,6 @@
 # You can use this method to build a complete command line out of an
 # array of arguments.
 #
-# === Authors
-# * Wakou Aoyama
-# * Akinori MUSHA <knu@iDaemons.org>
-#
-# === Contact
-# * Akinori MUSHA <knu@iDaemons.org> (current maintainer)
-#
 # === Resources
 #
 # 1: {IEEE Std 1003.1-2008, 2016 Edition, the Shell & Utilities volume}[http://pubs.opengroup.org/onlinepubs/9699919799/utilities/contents.html]
@@ -85,12 +77,13 @@ module Shellwords
   #
   #   argv = 'here are "two words"'.shellsplit
   #   argv #=> ["here", "are", "two words"]
-  def shellsplit(line)
-    words = []
-    field = String.new
-    line.scan(/\G\s*(?>([^\s\\\'\"]+)|'([^\']*)'|"((?:[^\"\\]|\\.)*)"|(\\.?)|(\S))(\s|\z)?/m) do
-      |word, sq, dq, esc, garbage, sep|
-      raise ArgumentError, "Unmatched quote: #{line.inspect}" if garbage
+  def self.shellsplit(line)
+    words = [] of String
+    field = ""
+    line.scan(/\G\s*(?>([^\s\\\'\"]+)|'([^\']*)'|"((?:[^\"\\]|\\.)*)"|(\\.?)|(\S))(\s|\z)?/m) do |matchdata|
+      word, sq, dq, esc, garbage, sep = matchdata
+
+      raise ArgumentError.new("Unmatched quote: #{line.inspect}") if garbage
       # 2.2.3 Double-Quotes:
       #
       #   The <backslash> shall retain its special meaning as an
@@ -98,22 +91,22 @@ module Shellwords
       #   characters when considered special:
       #
       #   $ ` " \ <newline>
-      field << (word || sq || (dq && dq.gsub(/\\([$`"\\\n])/, '\\1')) || esc.gsub(/\\(.)/, '\\1'))
+      field += (word || sq || (dq && dq.gsub(/\\([$`"\\\n])/, "\\1")) || esc.gsub(/\\(.)/, "\\1"))
       if sep
         words << field
-        field = String.new
+        field = ""
       end
     end
     words
   end
 
-  alias shellwords shellsplit
+  # alias shellwords shellsplit
 
-  module_function :shellsplit, :shellwords
+  # module_function :shellsplit, :shellwords
 
-  class << self
-    alias split shellsplit
-  end
+  # class << self
+  #   alias split shellsplit
+  # end
 
   # Escapes a string so that it can be safely used in a Bourne shell
   # command line.  +str+ can be a non-string object that responds to
@@ -145,7 +138,7 @@ module Shellwords
   # Multibyte characters are treated as multibyte characters, not as bytes.
   #
   # Returns an empty quoted String if +str+ has a length of zero.
-  def shellescape(str)
+  def self.shellescape(str)
     str = str.to_s
 
     # An empty argument will be skipped, so return empty quotes.
@@ -156,20 +149,20 @@ module Shellwords
     # Treat multibyte characters as is.  It is the caller's responsibility
     # to encode the string in the right encoding for the shell
     # environment.
-    str.gsub!(/[^A-Za-z0-9_\-.,:+\/@\n]/, "\\\\\\&")
+    str = str.gsub(/[^A-Za-z0-9_\-.,:+\/@\n]/, "\\\\\\&")
 
     # A LF cannot be escaped with a backslash because a backslash + LF
     # combo is regarded as a line continuation and simply ignored.
-    str.gsub!(/\n/, "'\n'")
+    str = str.gsub(/\n/, "'\n'")
 
-    return str
+    str
   end
 
-  module_function :shellescape
+  # module_function :shellescape
 
-  class << self
-    alias escape shellescape
-  end
+  # class << self
+  #   alias escape shellescape
+  # end
 
   # Builds a command line string from an argument list, +array+.
   #
@@ -191,15 +184,14 @@ module Shellwords
   #
   #   output = `#{['ps', '-p', $$].shelljoin}`
   #
-  def shelljoin(array)
+  def self.shelljoin(array)
     array.map { |arg| shellescape(arg) }.join(' ')
   end
 
-  module_function :shelljoin
-
-  class << self
-    alias join shelljoin
-  end
+  # module_function :shelljoin
+  # class << self
+  #   alias join shelljoin
+  # end
 end
 
 class String
