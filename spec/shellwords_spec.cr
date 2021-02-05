@@ -3,12 +3,12 @@ require "./spec_helper"
 describe Shellwords do
   it "parse a string into a Bourne shell friendly Array" do
     cmd = "ruby -i'.bak' -pe \"sub /foo/, '\\\\&bar'\" foobar\\ me.txt\n"
-    ["ruby", "-i.bak", "-pe", "sub /foo/, '\\&bar'", "foobar me.txt"].should eq(Shellwords.shellsplit(cmd))
+    Shellwords.shellsplit(cmd).should eq(["ruby", "-i.bak", "-pe", "sub /foo/, '\\&bar'", "foobar me.txt"])
   end
 
   it "does not interpret meta-characters" do
-    cmd = "ruby my_prog.rb | less"
-    ["ruby", "my_prog.rb", "|", "less"].should eq(Shellwords.shellsplit(cmd))
+    cmd = "crystal my_prog.cr | less"
+    ["crystal", "my_prog.cr", "|", "less"].should eq(Shellwords.shellsplit(cmd))
   end
 
   it "it raises an error with unmatched double quotes" do
@@ -26,32 +26,34 @@ describe Shellwords do
   end
 
   it "raises an error with unmatched quotes" do
-    bad_cmd = "one '\"'\"''\"\"'\""
+    bad_cmd = "one '\"\"\""
     expect_raises ArgumentError do
       Shellwords.shellsplit(bad_cmd)
     end
   end
 
-  # TODO: re-enable this spec
-  # def test_backslashes
-  #   [
-  #     [
-  #       %q{/a//b///c////d/////e/ "/a//b///c////d/////e/ "'/a//b///c////d/////e/ '/a//b///c////d/////e/ },
-  #       "a/b/c//d//e /a/b//c//d///e/ /a//b///c////d/////e/ a/b/c//d//e "
-  #     ],
-  #     [
-  #       %q{printf %s /"/$/`///"/r/n},
-  #       "printf', '%s', '\"$`/\"rn"
-  #     ],
-  #     [
-  #       %q{printf %s "/"/$/`///"/r/n"},
-  #       "printf', '%s', '\"$`/\"/r/n"
-  #     ]
-  #   ].map { |strs|
-  #     cmdline, *expected = strs.map { |str| str.tr("/", "\\\\") }
-  #     assert_equal expected, shellsplit(cmdline)
-  #   }
-  # end
+  it "handles backslashes" do
+    [
+      {
+        %q{/a//b///c////d/////e/ "/a//b///c////d/////e/ "'/a//b///c////d/////e/ '/a//b///c////d/////e/ },
+        ["a/b/c//d//e /a/b//c//d///e/ /a//b///c////d/////e/ a/b/c//d//e "],
+      },
+      {
+        %q{printf %s /"/$/`///"/r/n},
+        ["printf", "%s", "\"$`/\"rn"],
+      },
+      {
+        %q{printf %s "/"/$/`///"/r/n"},
+        ["printf", "%s", "\"$`/\"/r/n"],
+      },
+    ].map do |strs|
+      cmdline, expected = strs
+      cmdline = cmdline.tr("/", "\\\\")
+      expected = expected.map { |str| str.tr("/", "\\\\") }
+
+      Shellwords.shellsplit(cmdline).should eq(expected)
+    end
+  end
 
   it "stringifies" do
     three = Shellwords.shellescape(3)
@@ -85,16 +87,16 @@ describe Shellwords do
       empty,
     ]
 
-    tokens.each { |token|
+    tokens.each do |token|
       Shellwords.shellescape(token).shellsplit.should eq([token])
-    }
+    end
 
     Shellwords.shelljoin(tokens).shellsplit.should eq(tokens)
   end
 
   it "works with multibyte characters" do
-    # This is not a spec.  It describes the current behavior which may
-    # be changed in future.  There would be no multibyte character
+    # This is not a spec. It describes the current behavior which may
+    # be changed in the future. There would be no multibyte character
     # used as shell meta-character that needs to be escaped.
     "あい".shellescape.should eq("\\あ\\い")
   end

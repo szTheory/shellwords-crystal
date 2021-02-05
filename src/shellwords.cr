@@ -38,8 +38,8 @@
 #   system("cat -- #{filename.shellescape}")
 #   # runs "cat -- special\\'s.txt"
 #
-# Note the '--'.  Without it, cat(1) will treat the following argument
-# as a command line option if it starts with '-'.  It is guaranteed
+# Note the '--'. Without it, cat(1) will treat the following argument
+# as a command line option if it starts with '-'. It is guaranteed
 # that Shellwords.escape converts a string to a form that a Bourne
 # shell will parse back to the original string, but it is the
 # programmer's responsibility to make sure that passing an arbitrary
@@ -66,22 +66,29 @@ module Shellwords
   #   argv = Shellwords.split('here are "two words"')
   #   argv #=> ["here", "are", "two words"]
   #
-  # Note, however, that this is not a command line parser.  Shell
+  # Note, however, that this is not a command line parser. Shell
   # metacharacters except for the single and double quotes and
   # backslash are not treated as such.
   #
-  #   argv = Shellwords.split('ruby my_prog.rb | less')
-  #   argv #=> ["ruby", "my_prog.rb", "|", "less"]
+  #   argv = Shellwords.split('crystal my_prog.cr | less')
+  #   argv #=> ["crystal", "my_prog.cr", "|", "less"]
   #
   # String#shellsplit is a shortcut for this function.
   #
   #   argv = 'here are "two words"'.shellsplit
   #   argv #=> ["here", "are", "two words"]
+  SHELLSPLIT_REGEXP = /\G\s*(?>([^\s\\\'\"]+)|'([^\']*)'|"((?:[^\"\\]|\\.)*)"|(\\.?)|(\S))(\s|\z)?/m
+
   def self.shellsplit(line)
     words = [] of String
     field = ""
-    line.scan(/\G\s*(?>([^\s\\\'\"]+)|'([^\']*)'|"((?:[^\"\\]|\\.)*)"|(\\.?)|(\S))(\s|\z)?/m) do |matchdata|
-      word, sq, dq, esc, garbage, sep = matchdata
+    line.scan(SHELLSPLIT_REGEXP) do |matchdata|
+      word = matchdata[1]?
+      single_quote = matchdata[2]?
+      double_quote = matchdata[3]?
+      escape = matchdata[4]?
+      garbage = matchdata[5]?
+      separator = matchdata[6]?
 
       raise ArgumentError.new("Unmatched quote: #{line.inspect}") if garbage
       # 2.2.3 Double-Quotes:
@@ -91,8 +98,14 @@ module Shellwords
       #   characters when considered special:
       #
       #   $ ` " \ <newline>
-      field += (word || sq || (dq && dq.gsub(/\\([$`"\\\n])/, "\\1")) || esc.gsub(/\\(.)/, "\\1"))
-      if sep
+      value = (word || single_quote || (double_quote && double_quote.gsub(/\\([$`"\\\n])/, "\\1")) || (escape && escape.gsub(/\\(.)/, "\\1")))
+      if !value
+        raise "Value was nil!"
+      end
+
+      field += value
+
+      if separator
         words << field
         field = ""
       end
@@ -146,10 +159,10 @@ module Shellwords
 
     str = str.dup
 
-    # Treat multibyte characters as is.  It is the caller's responsibility
+    # Treat multibyte characters as is. It is the caller's responsibility
     # to encode the string in the right encoding for the shell
     # environment.
-    str = str.gsub(/[^A-Za-z0-9_\-.,:+\/@\n]/, "\\\\\\&")
+    str = str.gsub(/[^A-Za-z0-9_\-.,:+\/@\n]/, "\\\\\\0")
 
     # A LF cannot be escaped with a backslash because a backslash + LF
     # combo is regarded as a line continuation and simply ignored.
