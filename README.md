@@ -1,6 +1,6 @@
 # Shellwords
 
-[![Build Status](https://travis-ci.org/szTheory/shellwords-crystal.svg?branch=master)](https://travis-ci.org/szTheory/shellwords-crystal) [![Docs](https://img.shields.io/badge/docs-available-brightgreen.svg)](https://sztheory.github.io/shellwords-crystal/) [![GitHub release](https://img.shields.io/github/release/szTheory/shellwords-crystal.svg)](https://github.com/szTheory/shellwords-crystal/releases) ![GitHub stars](https://img.shields.io/github/stars/szTheory/shellwords-crystal?style=social)
+[![Build Status](https://travis-ci.com/szTheory/shellwords-crystal.svg?branch=master)](https://travis-ci.com/szTheory/shellwords-crystal) [![Docs](https://img.shields.io/badge/docs-available-brightgreen.svg)](https://sztheory.github.io/shellwords-crystal/) [![GitHub release](https://img.shields.io/github/release/szTheory/shellwords-crystal.svg)](https://github.com/szTheory/shellwords-crystal/releases) ![GitHub stars](https://img.shields.io/github/stars/szTheory/shellwords-crystal?style=social)
 
 
 This module manipulates strings according to the word parsing rules
