@@ -11,26 +11,22 @@ Std 1003.1-2008, 2016 Edition [1].
 
 ## Installation
 
-Add this line to your application's Gemfile:
+1. Add the dependency to your `shard.yml`:
 
-```ruby
-gem 'shellwords'
+```yaml
+dependencies:
+  shellwords:
+    github: szTheory/shellwords-crystal
 ```
 
-And then execute:
-
-    $ bundle install
-
-Or install it yourself as:
-
-    $ gem install shellwords
+2. Run `shards install`
 
 ## Usage
 
 ```crystal
 require 'shellwords'
 
-argv = Shellwords.split('three blind "mice"')
+argv = Shellwords.shellsplit('three blind "mice"')
 argv #=> ["three", "blind", "mice"]
 ```
 
@@ -43,4 +39,3 @@ TODO: add instructions for publishing a new shard version
 ## Contributing
 
 Bug reports and pull requests are welcome on GitHub at https://github.com/szTheory/shellwords-crystal
-
