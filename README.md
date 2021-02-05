@@ -1,7 +1,10 @@
 # Shellwords
 
+[![Build Status](https://travis-ci.org/szTheory/shellwords-crystal.svg?branch=master)](https://travis-ci.org/szTheory/shellwords-crystal) [![Docs](https://img.shields.io/badge/docs-available-brightgreen.svg)](https://sztheory.github.io/shellwords-crystal/) [![GitHub release](https://img.shields.io/github/release/szTheory/shellwords-crystal.svg)](https://github.com/szTheory/shellwords-crystal/releases) ![GitHub stars](https://img.shields.io/github/stars/szTheory/shellwords-crystal?style=social)
+
+
 This module manipulates strings according to the word parsing rules
-of the UNIX Bourne shell.
+of the UNIX Bourne shell. Fork of the [Ruby shellwords gem](https://rubygems.org/gems/shellwords).
 
 The shellwords() function was originally a port of shellwords.pl,
 but modified to conform to the Shell & Utilities volume of the IEEE
@@ -34,7 +37,6 @@ argv #=> ["three", "blind", "mice"]
 
 After checking out the repo, install the shard dependencies. Then, run `crystal spec` to run the specs. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
 
-TODO: add instructions for publishing a new shard version
 
 ## Contributing
 
